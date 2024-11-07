@@ -1,3 +1,5 @@
+import moment from "moment";
+
 export const isDevelopmentMode = () => process.env.NODE_ENV === "development";
 
 const hindiDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
@@ -48,6 +50,16 @@ export function toMoneyFormat(value: string): string {
 	if (!v) return "";
 	if (v.length < 3) return v;
 	return v.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+}
+
+/**
+ ** Iran Time
+ * @returns **nowDate:** `format("YYYY-MM-DD")`
+ */
+export function getNow() {
+	const now = moment().utc().utcOffset(3.5);
+	const nowDate = now.format("YYYY-MM-DD");
+	return { now, nowDate };
 }
 
 export class Mutex {

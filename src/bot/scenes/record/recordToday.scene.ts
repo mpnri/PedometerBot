@@ -3,7 +3,7 @@ import { goToMainScene, ScenesIDs as SceneIDs, ScenesIDs } from "../common";
 import type { BotContext } from "~/bot/session";
 import { prisma } from "~/db";
 import { isTextMessage } from "~/bot/utils/types";
-import { digitsToLatin } from "~/utils";
+import { digitsToHindi, digitsToLatin, getNow } from "~/utils";
 import moment from "moment";
 
 const sceneReplyWithBack = (ctx: BotContext, message: string) =>
@@ -16,7 +16,24 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		const { id, uid } = ctx.session;
 		if (chat?.type !== "private" || !id || !uid) return;
 
-		await sceneReplyWithBack(ctx, "میزان پیاده‌روی امروز خود را وارد کنید.");
+		const { nowDate } = getNow();
+		const user = await prisma.user.findUnique({
+			where: { uid },
+			include: { walks: true },
+		});
+		if (!user) {
+			return goToMainScene(ctx);
+		}
+		const walk = user.walks.find((walk) => walk.date === nowDate);
+		if (walk) {
+			await sceneReplyWithBack(
+				ctx,
+				`میزان پیاده‌روی امروز شما: ${digitsToHindi(walk.count.toString())}
+        درصورت نیاز به ویرایش ، میزان پیاده‌روی خود را مجددا وارد کنید.`,
+			);
+		} else {
+			await sceneReplyWithBack(ctx, "میزان پیاده‌روی امروز خود را وارد کنید.");
+		}
 		return ctx.wizard.next();
 	},
 	async (ctx) => {
@@ -50,17 +67,25 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		}
 
 		//iran time
-		const now = moment().utc().utcOffset(3.5);
-		console.log(now.calendar());
-
-		await prisma.walk.create({
-			data: {
-				ownerID: id,
-				count,
-				date: now.format("YYYY-MM-DD"),
-			},
+		const { now, nowDate } = getNow();
+		console.log(uid, now.calendar());
+		const oldWalk = await prisma.walk.findFirst({
+			where: { ownerID: id, date: nowDate },
 		});
-		await ctx.reply("با موفقیت ذخیره شد ✅");
+		if (oldWalk) {
+			await prisma.walk.update({ where: { id: oldWalk.id }, data: { count } });
+      await ctx.reply("با موفقیت به روزرسانی شد ✅");
+		} else {
+			await prisma.walk.create({
+				data: {
+					ownerID: id,
+					count,
+					date: nowDate,
+				},
+			});
+      await ctx.reply("با موفقیت ذخیره شد ✅");
+		}
+		
 		await goToMainScene(ctx);
 		return ctx.wizard.next();
 	},
