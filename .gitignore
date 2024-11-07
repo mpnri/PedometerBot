@@ -12,5 +12,6 @@ dist/
 
 public/
 
-dev.db
+*.db
+*.sqlite
 *.db-journal

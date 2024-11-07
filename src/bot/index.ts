@@ -1,6 +1,7 @@
 import { SocksProxyAgent } from "socks-proxy-agent";
 import { Markup, session, Telegraf } from "telegraf";
-import type { BotContext } from "./session";
+import { SQLite } from "@telegraf/session/sqlite";
+import type { BotContext, BotSession } from "./session";
 import { isDevelopmentMode } from "../utils";
 import { BotStage } from "./scenes";
 import { goToMainScene, ScenesIDs } from "./scenes/common";
@@ -9,12 +10,17 @@ import { prisma } from "../db";
 const proxy = new SocksProxyAgent("socks5://127.0.0.1:10808");
 
 export const SetupBot = async (token: string) => {
+	const store = SQLite<BotSession>({
+		filename: "././telegraf-sessions.sqlite",
+		onInitError: (e) => {console.error("errrr", e)},
+	});
 	const bot = new Telegraf<BotContext>(token, {
 		telegram: isDevelopmentMode() ? { agent: proxy } : undefined,
 	});
 	// bot.telegram.sendMessage
 
-	bot.use(session({ defaultSession: (c) => ({}) }));
+	// bot.use(session({ defaultSession: (c) => ({}) }));
+	bot.use(session({ store }));
 	bot.use(BotStage.middleware());
 
 	bot.start(async (ctx, next) => {
@@ -33,7 +39,9 @@ export const SetupBot = async (token: string) => {
 	});
 
 	bot.use(async (ctx) => {
+		console.log("balee", ctx.scene.current?.id);
 		if (ctx.scene.current?.id !== ScenesIDs.MainScene) {
+			//todo: not working
 			return goToMainScene(ctx);
 		}
 	});
