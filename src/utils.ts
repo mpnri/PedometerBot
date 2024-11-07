@@ -45,6 +45,16 @@ export const digitsToLatin = (inputNumber: string): string => {
 	return result;
 };
 
+const digitEmojis = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"];
+
+export const digitsToEmoji = (inputString: string): string => {
+	let result = inputString;
+	new Array(10).fill(0).map((e, index) => {
+		result = result.replace(index.toString(), digitEmojis[index]);
+	});
+	return result;
+};
+
 export function toMoneyFormat(value: string): string {
 	const v = value.replace(/,/g, "");
 	if (!v) return "";
