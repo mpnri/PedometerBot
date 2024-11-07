@@ -11,6 +11,8 @@ interface BotWizardSession extends Scenes.WizardSessionData {
 
 export interface BotSession extends Scenes.WizardSession<BotWizardSession> {
   cnt?: number;
+  id?: number;
+  uid?: number;
   isAuthenticated?: boolean;
 }
 

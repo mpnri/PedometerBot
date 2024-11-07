@@ -11,10 +11,13 @@ const mainScene = new Scenes.WizardScene<BotContext>(
 
 		if (!ctx.session.isAuthenticated) {
 			//* create user if not exist
-			if (!(await prisma.user.findUnique({ where: { id: chat.id } }))) {
-				await prisma.user.create({ data: { uid: chat.id } });
-				ctx.session.isAuthenticated = true;
+			let user = await prisma.user.findUnique({ where: { uid: chat.id } });
+			if (!user) {
+				user = await prisma.user.create({ data: { uid: chat.id } });
 			}
+			ctx.session.isAuthenticated = true;
+			ctx.session.uid = chat.id;
+			ctx.session.id = user.id;
 		}
 
 		await ctx.reply(

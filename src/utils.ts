@@ -6,6 +6,43 @@ export const digitsToHindi = (number?: string): string => {
 	return number?.replace(/[0-9]/g, (w) => hindiDigits[+w]) ?? "";
 };
 
+const persianNumbers = [
+	/۰/g,
+	/۱/g,
+	/۲/g,
+	/۳/g,
+	/۴/g,
+	/۵/g,
+	/۶/g,
+	/۷/g,
+	/۸/g,
+	/۹/g,
+];
+const arabicNumbers = [
+	/٠/g,
+	/١/g,
+	/٢/g,
+	/٣/g,
+	/٤/g,
+	/٥/g,
+	/٦/g,
+	/٧/g,
+	/٨/g,
+	/٩/g,
+];
+
+export const digitsToLatin = (inputNumber: string): string => {
+	let result = inputNumber;
+	if (typeof result === "string") {
+		new Array(10).fill(0).map((e, index) => {
+			result = result
+				.replace(persianNumbers[index], String(index))
+				.replace(arabicNumbers[index], String(index));
+		});
+	}
+	return result;
+};
+
 export function toMoneyFormat(value: string): string {
 	const v = value.replace(/,/g, "");
 	if (!v) return "";

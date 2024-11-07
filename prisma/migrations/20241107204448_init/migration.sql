@@ -10,7 +10,12 @@ CREATE TABLE "Walk" (
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     "ownerID" INTEGER NOT NULL,
-    "date" DATETIME NOT NULL,
+    "year" INTEGER NOT NULL,
+    "month" INTEGER NOT NULL,
+    "day" INTEGER NOT NULL,
     "count" INTEGER NOT NULL,
     CONSTRAINT "Walk_ownerID_fkey" FOREIGN KEY ("ownerID") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_uid_key" ON "User"("uid");
