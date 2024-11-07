@@ -1,0 +1,16 @@
+node_modules/
+lib/
+dist/
+.vscode/
+
+# *.tsbuildinfo
+# *.log
+.npmrc
+# .watchman*
+
+*.env
+
+public/
+
+dev.db
+*.db-journal
