@@ -37,7 +37,7 @@ export async function getTopMembers(bot: Telegraf<BotContext>, gID: number) {
 			}
 			const indexStr =
 				index > 3
-					? digitsToEmoji(index.toString()).split("").reverse().join("")
+					? digitsToEmoji(index.toString().split("").reverse().join(""))
 					: "";
 			topMessage += `${rankStr}${indexStr} کاربر ${name}: با ${digitsToHindi(sum.toString())} قدم\n\n`;
 			index++;
