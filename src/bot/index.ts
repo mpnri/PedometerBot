@@ -30,10 +30,15 @@ export const SetupBot = async (token: string) => {
 			process.env.GROUP_IDs?.split(",")
 				.splice(0, 1)
 				.map((gID) =>
-					getTopMembers(bot, +gID).then((message) => {
-						bot.telegram.sendMessage(gID, message).catch((err) => {
-							console.error(`Job sendMessage error for ${gID}`, err);
-						});
+					getTopMembers(bot, gID).then((message) => {
+						bot.telegram
+							.sendMessage(gID, message)
+							.then((res) => {
+								console.log(`message successfully sent to ${gID}`, res);
+							})
+							.catch((err) => {
+								console.error(`Job sendMessage error for ${gID}`, err);
+							});
 					}),
 				);
 		}

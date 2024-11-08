@@ -3,7 +3,7 @@ import type { BotContext } from "../session";
 import type { Telegraf } from "telegraf";
 import { digitsToEmoji, digitsToHindi } from "~/utils";
 
-export async function getTopMembers(bot: Telegraf<BotContext>, gID: number) {
+export async function getTopMembers(bot: Telegraf<BotContext>, gID: number | string) {
 	const users = await prisma.user.findMany({ include: { walks: true } });
 	const sortedUsers = users.sort((user1, user2) => {
 		const sum1 = user1.walks.reduce((prevSum, curr) => prevSum + curr.count, 0);
