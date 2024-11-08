@@ -31,11 +31,13 @@ export const SetupBot = async (token: string) => {
 				.splice(0, 1)
 				.map((gID) =>
 					getTopMembers(bot, +gID).then((message) => {
-						bot.telegram.sendMessage(gID, message);
+						bot.telegram.sendMessage(gID, message).catch((err) => {
+							console.error(`Job sendMessage error for ${gID}`, err);
+						});
 					}),
 				);
 		}
-	}, 45_000);
+	}, 60_000);
 	// bot.use(async (ctx) => {
 	// 	console.log("balee", ctx.message);
 	// 	// if (ctx.scene.current?.id !== ScenesIDs.MainScene) {

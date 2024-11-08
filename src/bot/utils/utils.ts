@@ -19,7 +19,9 @@ export async function getTopMembers(bot: Telegraf<BotContext>, gID: number) {
 				gID,
 				+user.uid.toString(),
 			);
-			const name = fullUser.user.first_name;
+			const name =
+				fullUser.user.first_name +
+				(fullUser.user.last_name ? ` ${fullUser.user.last_name}` : "");
 			const sum = user.walks.reduce((prevSum, curr) => prevSum + curr.count, 0);
 			let rankStr = "";
 			switch (index) {
@@ -33,7 +35,11 @@ export async function getTopMembers(bot: Telegraf<BotContext>, gID: number) {
 					rankStr = "🥉";
 					break;
 			}
-			topMessage += `${rankStr}${digitsToEmoji(index.toString())} کاربر ${name}: با ${digitsToHindi(sum.toString())} قدم\n\n`;
+			const indexStr =
+				index > 3
+					? digitsToEmoji(index.toString()).split("").reverse().join("")
+					: "";
+			topMessage += `${rankStr}${indexStr} کاربر ${name}: با ${digitsToHindi(sum.toString())} قدم\n\n`;
 			index++;
 			if (index > 50) break;
 		} catch (error) {
