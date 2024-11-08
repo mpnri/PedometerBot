@@ -34,14 +34,20 @@ mainScene.hears("ثبت پیاده‌روی امروز", async (ctx) => {
 mainScene.hears("مشاهده وضعیت", async (ctx) => {
 	const { id } = ctx.session;
 	if (!id) {
-		return sceneReplyWithButtons(ctx, "مشکلی پیش آمد. بات را مجددا استارت کنید.");
+		return sceneReplyWithButtons(
+			ctx,
+			"مشکلی پیش آمد. بات را مجددا استارت کنید.",
+		);
 	}
 	const user = await prisma.user.findUnique({
 		where: { id },
 		include: { walks: { orderBy: { date: "asc" } } },
 	});
 	if (!user) {
-		return sceneReplyWithButtons(ctx, "مشکلی پیش آمد. بات را مجددا استارت کنید.");
+		return sceneReplyWithButtons(
+			ctx,
+			"مشکلی پیش آمد. بات را مجددا استارت کنید.",
+		);
 	}
 	if (!user.walks.length) {
 		return sceneReplyWithButtons(ctx, "شما تا اکنون رکوردی ثبت نکردید.");
@@ -52,7 +58,13 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 		})
 		.join("\n\n");
 
-	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}`;
+	const totalCount = user.walks.reduce(
+		(prev, current) => prev + current.count,
+		0,
+	);
+	const totalCountStr = digitsToHindi(totalCount.toString());
+
+	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}\n\n📈 شما در ۳۰ روز گذشته در مجموع ${totalCountStr} قدم پیاده‌روی داشته اید.`;
 	return sceneReplyWithButtons(ctx, message);
 });
 
