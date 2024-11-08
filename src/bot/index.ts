@@ -2,22 +2,48 @@ import { SocksProxyAgent } from "socks-proxy-agent";
 import { Markup, session, Telegraf } from "telegraf";
 import { SQLite } from "@telegraf/session/sqlite";
 import type { BotContext, BotSession } from "./session";
-import { isDevelopmentMode } from "../utils";
+import { getNow, isDevelopmentMode } from "../utils";
 import { BotStage } from "./scenes";
 import { goToMainScene, ScenesIDs } from "./scenes/common";
 import { prisma } from "../db";
+import { getTopMembers } from "./utils/utils";
 
 const proxy = new SocksProxyAgent("socks5://127.0.0.1:10808");
 
 export const SetupBot = async (token: string) => {
 	const store = SQLite<BotSession>({
 		filename: "././telegraf-sessions.sqlite",
-		onInitError: (e) => {console.error("errrr", e)},
+		onInitError: (e) => {
+			console.error("errrr", e);
+		},
 	});
 	const bot = new Telegraf<BotContext>(token, {
 		telegram: isDevelopmentMode() ? { agent: proxy } : undefined,
 	});
+
 	// bot.telegram.sendMessage
+	setInterval(() => {
+		const { now } = getNow();
+
+		const time = now.format("HH:mm");
+		if (time === process.env.GROUP_JOB_TIME) {
+			process.env.GROUP_IDs?.split(",")
+				.splice(0, 1)
+				.map((gID) =>
+					getTopMembers(bot, +gID).then((message) => {
+						bot.telegram.sendMessage(gID, message);
+					}),
+				);
+		}
+	}, 45_000);
+	// bot.use(async (ctx) => {
+	// 	console.log("balee", ctx.message);
+	// 	// if (ctx.scene.current?.id !== ScenesIDs.MainScene) {
+	// 	// 	//todo: not working
+	// 	// 	return goToMainScene(ctx);
+	// 	// }
+	// });
+	// bot.on("message", async (ctx) => {});
 
 	// bot.use(session({ defaultSession: (c) => ({}) }));
 	bot.use(session({ store }));
