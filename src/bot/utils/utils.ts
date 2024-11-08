@@ -15,7 +15,10 @@ export async function getTopMembers(bot: Telegraf<BotContext>, gID: number) {
 	let index = 1;
 	for (const user of sortedUsers) {
 		try {
-			const fullUser = await bot.telegram.getChatMember(gID, user.uid);
+			const fullUser = await bot.telegram.getChatMember(
+				gID,
+				+user.uid.toString(),
+			);
 			const name = fullUser.user.first_name;
 			const sum = user.walks.reduce((prevSum, curr) => prevSum + curr.count, 0);
 			let rankStr = "";
@@ -33,7 +36,9 @@ export async function getTopMembers(bot: Telegraf<BotContext>, gID: number) {
 			topMessage += `${rankStr}${digitsToEmoji(index.toString())} کاربر ${name}: با ${digitsToHindi(sum.toString())} قدم\n\n`;
 			index++;
 			if (index > 50) break;
-		} catch (error) {}
+		} catch (error) {
+			console.log("getTopMembersError", error);
+		}
 	}
 
 	const totalSumStr = users

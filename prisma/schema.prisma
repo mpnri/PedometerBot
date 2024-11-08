@@ -12,7 +12,7 @@ datasource db {
 
 model User {
   id    Int    @id @default(autoincrement())
-  uid   Int    @unique
+  uid   BigInt    @unique
   walks Walk[]
 }
 
