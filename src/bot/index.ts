@@ -27,20 +27,18 @@ export const SetupBot = async (token: string) => {
 
 		const time = now.format("HH:mm");
 		if (time === process.env.GROUP_JOB_TIME) {
-			process.env.GROUP_IDs?.split(",")
-				.splice(0, 1)
-				.map((gID) =>
-					getTopMembers(bot, gID).then((message) => {
-						bot.telegram
-							.sendMessage(gID, message)
-							.then((res) => {
-								console.log(`message successfully sent to ${gID}`, res);
-							})
-							.catch((err) => {
-								console.error(`Job sendMessage error for ${gID}`, err);
-							});
-					}),
-				);
+			process.env.GROUP_IDs?.split(",").map((gID) =>
+				getTopMembers(bot, gID).then((message) => {
+					bot.telegram
+						.sendMessage(gID, message)
+						.then((res) => {
+							console.log(`message successfully sent to ${gID}`, res);
+						})
+						.catch((err) => {
+							console.error(`Job sendMessage error for ${gID}`, err);
+						});
+				}),
+			);
 		}
 	}, 60_000);
 	// bot.use(async (ctx) => {
