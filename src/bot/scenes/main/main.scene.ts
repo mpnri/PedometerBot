@@ -5,7 +5,13 @@ import { prisma } from "~/db";
 import { digitsToEmoji, digitsToHindi } from "~/utils";
 
 const sceneReplyWithButtons = (ctx: BotContext, message: string) =>
-	ctx.reply(message, Markup.keyboard(["ثبت پیاده‌روی امروز", "مشاهده وضعیت"]));
+	ctx.reply(
+		message,
+		Markup.keyboard(
+			["ثبت پیاده‌روی امروز", "ثبت پیاده روی روز‌های قبل", "مشاهده وضعیت"],
+			{ columns: 2 },
+		),
+	);
 
 const mainScene = new Scenes.WizardScene<BotContext>(
 	SceneIDs.MainScene,
@@ -30,6 +36,9 @@ const mainScene = new Scenes.WizardScene<BotContext>(
 
 mainScene.hears("ثبت پیاده‌روی امروز", async (ctx) => {
 	return ctx.scene.enter(ScenesIDs.RecordTodayScene);
+});
+mainScene.hears("ثبت پیاده روی روز‌های قبل", async (ctx) => {
+	return ctx.scene.enter(ScenesIDs.RecordBeforeScene);
 });
 mainScene.hears("مشاهده وضعیت", async (ctx) => {
 	const { id } = ctx.session;

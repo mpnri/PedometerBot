@@ -24,12 +24,11 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		if (!user) {
 			return goToMainScene(ctx);
 		}
-		const walk = user.walks.find((walk) => walk.date === nowDate);
+		const walk = user.walks.find((walk) => walk.date === nowDate());
 		if (walk) {
 			await sceneReplyWithBack(
 				ctx,
-				`میزان پیاده‌روی امروز شما: ${digitsToHindi(walk.count.toString())}
-        درصورت نیاز به ویرایش ، میزان پیاده‌روی خود را مجددا وارد کنید.`,
+				`میزان پیاده‌روی امروز شما: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش ، میزان پیاده‌روی خود را مجددا وارد کنید.`,
 			);
 		} else {
 			await sceneReplyWithBack(ctx, "میزان پیاده‌روی امروز خود را وارد کنید.");
@@ -70,22 +69,22 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		const { now, nowDate } = getNow();
 		console.log(uid, now.calendar());
 		const oldWalk = await prisma.walk.findFirst({
-			where: { ownerID: id, date: nowDate },
+			where: { ownerID: id, date: nowDate() },
 		});
 		if (oldWalk) {
 			await prisma.walk.update({ where: { id: oldWalk.id }, data: { count } });
-      await ctx.reply("با موفقیت به روزرسانی شد ✅");
+			await ctx.reply("با موفقیت به روزرسانی شد ✅");
 		} else {
 			await prisma.walk.create({
 				data: {
 					ownerID: id,
 					count,
-					date: nowDate,
+					date: nowDate(),
 				},
 			});
-      await ctx.reply("با موفقیت ذخیره شد ✅");
+			await ctx.reply("با موفقیت ذخیره شد ✅");
 		}
-		
+
 		await goToMainScene(ctx);
 		return ctx.wizard.next();
 	},

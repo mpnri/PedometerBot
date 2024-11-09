@@ -7,6 +7,9 @@ interface BotWizardSession extends Scenes.WizardSessionData {
   // start?: Location;
   // end?: Location;
   // paths?: Path[];
+  recordBeforeScene?: {
+    date?: string;
+  }
 }
 
 export interface BotSession extends Scenes.WizardSession<BotWizardSession> {

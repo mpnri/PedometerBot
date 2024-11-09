@@ -25,6 +25,7 @@
 		"@telegraf/session": "2.0.0-beta.7",
 		"better-sqlite3": "^11.5.0",
 		"dotenv": "^16.4.5",
+		"jalali-moment": "^3.3.11",
 		"kysely": "^0.27.4",
 		"moment": "^2.30.1",
 		"socks-proxy-agent": "^8.0.4",
