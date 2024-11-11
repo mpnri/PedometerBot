@@ -70,7 +70,11 @@ export const SetupBot = async (token: string) => {
 	});
 
 	bot.use(async (ctx) => {
-		console.log("balee", ctx.scene.current?.id);
+		console.log(
+			ctx.chat?.id,
+			"initialed without /start command",
+			ctx.scene.current?.id,
+		);
 		if (ctx.scene.current?.id !== ScenesIDs.MainScene) {
 			//todo: not working
 			return goToMainScene(ctx);
