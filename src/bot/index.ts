@@ -30,7 +30,7 @@ export const SetupBot = async (token: string) => {
 			process.env.GROUP_IDs?.split(",").map((gID) =>
 				getTopMembers(bot, gID).then((message) => {
 					bot.telegram
-						.sendMessage(gID, message)
+						.sendMessage(gID, message, { parse_mode: "HTML" })
 						.then((res) => {
 							console.log(`message successfully sent to ${gID}`, res);
 						})

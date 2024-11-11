@@ -44,7 +44,7 @@ export async function getTopMembers(
 					: "";
 
 			const walksCountStr = digitsToHindi(user.walks.length.toString());
-			topMessage += `${rankStr}${indexStr} کاربر ${name} با ${digitsToHindi(toMoneyFormat(sum.toString()))} قدم (${walksCountStr} روز پیاده روی)\n\n`;
+			topMessage += `${rankStr}${indexStr} کاربر <b>${name}</b> با ${digitsToHindi(toMoneyFormat(sum.toString()))} قدم (${walksCountStr} روز)\n\n`;
 			index++;
 			if (index > 50) break;
 		} catch (error) {
@@ -59,7 +59,7 @@ export async function getTopMembers(
 			0,
 		)
 		.toString();
-	const message = `📈برترین های این ماه:\n\n${topMessage}تا این لحظه در مجموع ${digitsToHindi(toMoneyFormat(totalSumStr))} قدم توسط اعضای این گروه طی شده است.`;
+	const message = `📈برترین های این ماه:\n\n${topMessage}🚶‍♂️ تا این لحظه در مجموع ${digitsToHindi(toMoneyFormat(totalSumStr))} قدم توسط اعضای این گروه طی شده است.`;
 
 	return message;
 }
