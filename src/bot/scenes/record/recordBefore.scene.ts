@@ -13,11 +13,25 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 	if (isDateQuery(callbackQuery)) {
 		const data = callbackQuery.data;
 		if (data === "edit-together") {
-			ctx.answerCbQuery("در حال انجام عملیات", { show_alert: false });
+			ctx
+				.answerCbQuery("در حال انجام عملیات", { show_alert: false })
+				.catch((err) => {
+					console.log(
+						`answer CB query 'edit-together' error for ${uid}:`,
+						err,
+						"در حال انجام عملیات",
+					);
+				});
 			return "edit-together";
 		}
 		if (data === "back-home") {
-			ctx.answerCbQuery("بازگشت", { show_alert: false });
+			ctx.answerCbQuery("بازگشت", { show_alert: false }).catch((err) => {
+				console.log(
+					`answer CB query 'back-home' error for ${uid}:`,
+					err,
+					"بازگشت",
+				);
+			});
 			return "go-home";
 		}
 
@@ -48,7 +62,13 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 		const walk = user.walks.find((walk) => walk.date === dataDate);
 		const CBQueryMessage = `میزان پیاده‌روی خود در ${dataDateLabel} را وارد کنید.`;
 
-		ctx.answerCbQuery(CBQueryMessage);
+		ctx.answerCbQuery(CBQueryMessage).catch((err) => {
+			console.log(
+				`answer CB query "record for date" error for ${uid}:`,
+				err,
+				CBQueryMessage,
+			);
+		});
 		if (walk) {
 			await ctx.reply(
 				`میزان پیاده‌روی شما در ${dataDateLabel}: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش ، میزان پیاده‌روی خود را مجددا وارد کنید.`,

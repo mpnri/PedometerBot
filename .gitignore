@@ -12,6 +12,7 @@ dist/
 
 public/
 backups/
+logs/
 
 *.db
 *.sqlite
