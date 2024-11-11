@@ -108,7 +108,7 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 		(prev, current) => prev + current.count,
 		0,
 	);
-	const totalCountStr = toMoneyFormat(digitsToHindi(totalCount.toString()));
+	const totalCountStr = digitsToHindi(toMoneyFormat(totalCount.toString()));
 
 	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}\n\n📈 شما در ۳۰ روز گذشته در مجموع ${totalCountStr} قدم پیاده‌روی داشته اید.`;
 	return sceneReplyWithButtons(ctx, message, uid);
