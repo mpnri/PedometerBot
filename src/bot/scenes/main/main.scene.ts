@@ -2,17 +2,34 @@ import { Markup, Scenes } from "telegraf";
 import { goToMainScene, ScenesIDs as SceneIDs, ScenesIDs } from "../common";
 import type { BotContext } from "~/bot/session";
 import { prisma } from "~/db";
-import { digitsToEmoji, digitsToHindi, toMoneyFormat } from "~/utils";
+import {
+	digitsToEmoji,
+	digitsToHindi,
+	FeatureFlag,
+	isFeatureFlagActive,
+	toMoneyFormat,
+} from "~/utils";
 import moment from "jalali-moment";
 
-const sceneReplyWithButtons = (ctx: BotContext, message: string) =>
-	ctx.reply(
+const sceneReplyWithButtons = (
+	ctx: BotContext,
+	message: string,
+	uid?: number,
+) => {
+	const isRecordBeforeDateActive = uid
+		? isFeatureFlagActive(FeatureFlag.RecordBeforeDate, uid)
+		: false;
+
+	return ctx.reply(
 		message,
 		Markup.keyboard(
-			["ثبت پیاده‌روی امروز", "ثبت پیاده‌روی روز‌های قبل", "مشاهده وضعیت"],
-			{ columns: 2 },
+			isRecordBeforeDateActive
+				? ["ثبت پیاده‌روی امروز", "ثبت پیاده‌روی روز‌های قبل", "مشاهده وضعیت"]
+				: ["ثبت پیاده‌روی امروز", "مشاهده وضعیت"],
+			{ columns: isRecordBeforeDateActive ? 2 : 1 },
 		),
 	);
+};
 
 const mainScene = new Scenes.WizardScene<BotContext>(
 	SceneIDs.MainScene,
@@ -31,7 +48,11 @@ const mainScene = new Scenes.WizardScene<BotContext>(
 			ctx.session.id = user.id;
 		}
 
-		await sceneReplyWithButtons(ctx, "یک گزینه را انتخاب کنید.");
+		await sceneReplyWithButtons(
+			ctx,
+			"یک گزینه را انتخاب کنید.",
+			ctx.session.uid,
+		);
 	},
 );
 
@@ -39,11 +60,20 @@ mainScene.hears("ثبت پیاده‌روی امروز", async (ctx) => {
 	return ctx.scene.enter(ScenesIDs.RecordTodayScene);
 });
 mainScene.hears("ثبت پیاده‌روی روز‌های قبل", async (ctx) => {
-	return ctx.scene.enter(ScenesIDs.RecordBeforeScene);
+	const { uid, id } = ctx.session;
+	if (!uid || !id) return;
+	if (isFeatureFlagActive(FeatureFlag.RecordBeforeDate, uid)) {
+		return ctx.scene.enter(ScenesIDs.RecordBeforeScene);
+	}
+	return sceneReplyWithButtons(
+		ctx,
+		"یک گزینه را انتخاب کنید.",
+		ctx.session.uid,
+	);
 });
 mainScene.hears("مشاهده وضعیت", async (ctx) => {
-	const { id } = ctx.session;
-	if (!id) {
+	const { id, uid } = ctx.session;
+	if (!id || !uid) {
 		return sceneReplyWithButtons(
 			ctx,
 			"مشکلی پیش آمد. بات را مجددا استارت کنید.",
@@ -57,10 +87,11 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 		return sceneReplyWithButtons(
 			ctx,
 			"مشکلی پیش آمد. بات را مجددا استارت کنید.",
+			uid,
 		);
 	}
 	if (!user.walks.length) {
-		return sceneReplyWithButtons(ctx, "شما تا اکنون رکوردی ثبت نکردید.");
+		return sceneReplyWithButtons(ctx, "شما تا اکنون رکوردی ثبت نکردید.", uid);
 	}
 	const status = user.walks
 		.map((walk, index) => {
@@ -80,7 +111,7 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 	const totalCountStr = toMoneyFormat(digitsToHindi(totalCount.toString()));
 
 	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}\n\n📈 شما در ۳۰ روز گذشته در مجموع ${totalCountStr} قدم پیاده‌روی داشته اید.`;
-	return sceneReplyWithButtons(ctx, message);
+	return sceneReplyWithButtons(ctx, message, uid);
 });
 
 export { mainScene };

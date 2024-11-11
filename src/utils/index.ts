@@ -113,3 +113,5 @@ export class Mutex {
 		return willUnlock;
 	}
 }
+
+export { FeatureFlag, isFeatureFlagActive } from "./feature";
