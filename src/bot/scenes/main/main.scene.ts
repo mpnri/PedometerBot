@@ -100,7 +100,7 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 				dataMoment.locale("fa").format("jDD jMMMM"),
 			);
 			const indexStr = (index + 1).toString().split("").reverse().join("");
-			return `${digitsToEmoji(indexStr)} ${dataMomentStr}\n🔸تعداد قدم‌ها: ${digitsToHindi(walk.count.toString())}`;
+			return `${digitsToEmoji(indexStr)} ${dataMomentStr}\n🔸تعداد قدم‌ها: ${digitsToHindi(toMoneyFormat(walk.count.toString()))}`;
 		})
 		.join("\n\n");
 
