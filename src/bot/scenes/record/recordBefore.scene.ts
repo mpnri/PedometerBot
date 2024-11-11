@@ -14,7 +14,7 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 		const data = callbackQuery.data;
 		if (data === "edit-together") {
 			ctx.answerCbQuery("در حال انجام عملیات", { show_alert: false });
-			return "edit";
+			return "edit-together";
 		}
 		if (data === "back-home") {
 			ctx.answerCbQuery("بازگشت", { show_alert: false });
@@ -23,6 +23,16 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 
 		//* so data is a "Date"
 		const dataDate = data;
+
+		//* check if it's before than 12 days ago
+		const { now } = getNow();
+		const twelveDaysBefore = now.subtract(AvailableEditDaysCount, "days");
+		if (twelveDaysBefore.isAfter(dataDate, "day")) {
+			await ctx.reply(
+				`این تاریخ قبل تر از ${digitsToHindi(AvailableEditDaysCount.toString())} روز قبل است و امکان ویرایش یا ثبت برای آن وجود ندارد.`,
+			);
+			return "fail";
+		}
 
 		const dataMoment = moment.from(dataDate, "en", "YYYY-MM-DD");
 		const dataDateLabel = digitsToHindi(
@@ -54,10 +64,17 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 
 const sendInlineDatesMessage = async (
 	ctx: BotContext,
+	uid: number,
 	lastAction?: "sent" | "edited",
 ) => {
 	const { now } = getNow();
 
+	//todo: heavy action?
+	const user = await prisma.user.findUnique({
+		where: { uid },
+		include: { walks: true },
+	});
+	const walks = user?.walks;
 	const availableDateButton = new Array(4)
 		.fill(0)
 		.map((_, index) => index)
@@ -65,8 +82,12 @@ const sendInlineDatesMessage = async (
 			const startDayOffSet = AvailableEditDaysCount - index * 3;
 			const cloneNow = now.clone().subtract(startDayOffSet, "days");
 			return new Array(3).fill(0).map((_, index) => {
-				const text = digitsToHindi(cloneNow.locale("fa").format("jDD jMMMM"));
 				const data = cloneNow.locale("en").format("YYYY-MM-DD");
+				const isAlreadyRecorded = walks?.find((walk) => walk.date === data);
+				const textPostfix = isAlreadyRecorded ? " ✅" : "";
+				const text = digitsToHindi(
+					cloneNow.locale("fa").format(`jDD jMMMM${textPostfix}`),
+				);
 
 				cloneNow.add(1, "days");
 				return Markup.button.callback(text, data);
@@ -99,9 +120,12 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 		const { id, uid } = ctx.session;
 		if (chat?.type !== "private" || !id || !uid) return;
 
-		const message = await ctx.reply("لطفا کمی صبر کنید", Markup.removeKeyboard());
+		const message = await ctx.reply(
+			"لطفا کمی صبر کنید",
+			Markup.removeKeyboard(),
+		);
 		// ctx.deleteMessage(message.message_id);
-		await sendInlineDatesMessage(ctx);
+		await sendInlineDatesMessage(ctx, uid);
 		return ctx.wizard.next();
 	},
 	async (ctx) => {
@@ -116,7 +140,7 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 		if (result === "next") {
 			return ctx.wizard.next();
 		}
-		if (result === "edit") {
+		if (result === "edit-together") {
 			return ctx.wizard.selectStep(ctx.wizard.cursor + 2);
 		}
 		return;
@@ -161,7 +185,7 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 		if (oldWalk) {
 			await prisma.walk.update({ where: { id: oldWalk.id }, data: { count } });
 			// await ctx.reply("با موفقیت به روزرسانی شد ✅");
-			await sendInlineDatesMessage(ctx, "edited");
+			await sendInlineDatesMessage(ctx, uid, "edited");
 		} else {
 			await prisma.walk.create({
 				data: {
@@ -171,7 +195,7 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 				},
 			});
 			// await ctx.reply("با موفقیت ذخیره شد ✅");
-			await sendInlineDatesMessage(ctx, "sent");
+			await sendInlineDatesMessage(ctx, uid, "sent");
 		}
 
 		return ctx.wizard.selectStep(1);
