@@ -14,7 +14,7 @@ export const SetupBot = async (token: string) => {
 	const store = SQLite<BotSession>({
 		filename: "././telegraf-sessions.sqlite",
 		onInitError: (e) => {
-			console.error("errrr", e);
+			console.error("session db error", e);
 		},
 	});
 	const bot = new Telegraf<BotContext>(token, {

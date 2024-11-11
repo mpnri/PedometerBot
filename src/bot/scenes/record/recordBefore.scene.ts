@@ -12,15 +12,19 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 	const callbackQuery = ctx.callbackQuery;
 	if (isDateQuery(callbackQuery)) {
 		const data = callbackQuery.data;
-		await ctx.answerCbQuery("در حال انجام عملیات", { show_alert: false });
 		if (data === "edit-together") {
+			ctx.answerCbQuery("در حال انجام عملیات", { show_alert: false });
 			return "edit";
 		}
 		if (data === "back-home") {
+			ctx.answerCbQuery("بازگشت", { show_alert: false });
 			return "go-home";
 		}
-		const dataMoment = moment.from(data, "en", "YYYY-MM-DD");
+
+		//* so data is a "Date"
 		const dataDate = data;
+
+		const dataMoment = moment.from(dataDate, "en", "YYYY-MM-DD");
 		const dataDateLabel = digitsToHindi(
 			dataMoment.locale("fa").format("jDD jMMMM"),
 		);
@@ -32,6 +36,9 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 			return "go-home";
 		}
 		const walk = user.walks.find((walk) => walk.date === dataDate);
+		const CBQueryMessage = `میزان پیاده‌روی خود در ${dataDateLabel} را وارد کنید.`;
+
+		ctx.answerCbQuery(CBQueryMessage);
 		if (walk) {
 			await ctx.reply(
 				`میزان پیاده‌روی شما در ${dataDateLabel}: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش ، میزان پیاده‌روی خود را مجددا وارد کنید.`,
@@ -45,6 +52,46 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 	return "fail";
 };
 
+const sendInlineDatesMessage = async (
+	ctx: BotContext,
+	lastAction?: "sent" | "edited",
+) => {
+	const { now } = getNow();
+
+	const availableDateButton = new Array(4)
+		.fill(0)
+		.map((_, index) => index)
+		.map((index) => {
+			const startDayOffSet = AvailableEditDaysCount - index * 3;
+			const cloneNow = now.clone().subtract(startDayOffSet, "days");
+			return new Array(3).fill(0).map((_, index) => {
+				const text = digitsToHindi(cloneNow.locale("fa").format("jDD jMMMM"));
+				const data = cloneNow.locale("en").format("YYYY-MM-DD");
+
+				cloneNow.add(1, "days");
+				return Markup.button.callback(text, data);
+			});
+		});
+	availableDateButton.push(
+		// [Markup.button.callback("ویرایش چند روز به صورت یک جا", "edit-together")],
+		[Markup.button.callback("بازگشت", "back-home")],
+	);
+
+	const lastActionMessage =
+		lastAction === "sent"
+			? "با موفقیت ذخیره شد ✅\n\n"
+			: lastAction === "edited"
+				? "با موفقیت به روزرسانی شد ✅\n\n"
+				: "";
+	const message =
+		lastActionMessage +
+		"یکی از گزینه‌های زیر را برای ثبت و یا ویرایش میزان پیاده‌روی خود انتخاب کنید." +
+		"\n" +
+		" شما می‌توانید میزان پیاده‌روی خود را تا حداکثر ۱۲ روز قبل ویرایش کنید.";
+
+	await ctx.reply(message, Markup.inlineKeyboard(availableDateButton));
+};
+
 const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 	SceneIDs.RecordBeforeScene,
 	async (ctx) => {
@@ -52,32 +99,9 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 		const { id, uid } = ctx.session;
 		if (chat?.type !== "private" || !id || !uid) return;
 
-		const { now } = getNow();
-
-		const availableDateButton = new Array(4)
-			.fill(0)
-			.map((_, index) => index)
-			.map((index) => {
-				const startDayOffSet = AvailableEditDaysCount - index * 3;
-				const cloneNow = now.clone().subtract(startDayOffSet, "days");
-				return new Array(3).fill(0).map((_, index) => {
-					const text = digitsToHindi(cloneNow.locale("fa").format("jDD jMMMM"));
-					const data = cloneNow.locale("en").format("YYYY-MM-DD");
-
-					cloneNow.add(1, "days");
-					return Markup.button.callback(text, data);
-				});
-			});
-		availableDateButton.push(
-			// [Markup.button.callback("ویرایش چند روز به صورت یک جا", "edit-together")],
-			[Markup.button.callback("بازگشت", "back-home")],
-		);
-		await ctx.reply("لطفا کمی صبر کنید", Markup.removeKeyboard());
-		await ctx.reply(
-			"یکی از گزینه‌های زیر را برای ثبت و یا ویرایش میزان پیاده‌روی خود انتخاب کنید.\n شما می‌توانید میزان پیاده‌روی خود را تا حداکثر ۱۲ روز قبل ویرایش کنید.",
-			Markup.inlineKeyboard(availableDateButton),
-		);
-
+		const message = await ctx.reply("لطفا کمی صبر کنید", Markup.removeKeyboard());
+		// ctx.deleteMessage(message.message_id);
+		await sendInlineDatesMessage(ctx);
 		return ctx.wizard.next();
 	},
 	async (ctx) => {
@@ -136,7 +160,8 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 		});
 		if (oldWalk) {
 			await prisma.walk.update({ where: { id: oldWalk.id }, data: { count } });
-			await ctx.reply("با موفقیت به روزرسانی شد ✅");
+			// await ctx.reply("با موفقیت به روزرسانی شد ✅");
+			await sendInlineDatesMessage(ctx, "edited");
 		} else {
 			await prisma.walk.create({
 				data: {
@@ -145,11 +170,13 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 					date: targetDate,
 				},
 			});
-			await ctx.reply("با موفقیت ذخیره شد ✅");
+			// await ctx.reply("با موفقیت ذخیره شد ✅");
+			await sendInlineDatesMessage(ctx, "sent");
 		}
 
-		await goToMainScene(ctx);
-		return ctx.wizard.next();
+		return ctx.wizard.selectStep(1);
+		// await goToMainScene(ctx);
+		// return ctx.wizard.next();
 	},
 	// async (ctx) => {},
 );

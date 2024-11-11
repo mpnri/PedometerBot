@@ -1,9 +1,12 @@
 import { prisma } from "~/db";
 import type { BotContext } from "../session";
 import type { Telegraf } from "telegraf";
-import { digitsToEmoji, digitsToHindi } from "~/utils";
+import { digitsToEmoji, digitsToHindi, toMoneyFormat } from "~/utils";
 
-export async function getTopMembers(bot: Telegraf<BotContext>, gID: number | string) {
+export async function getTopMembers(
+	bot: Telegraf<BotContext>,
+	gID: number | string,
+) {
 	const users = await prisma.user.findMany({ include: { walks: true } });
 	const sortedUsers = users.sort((user1, user2) => {
 		const sum1 = user1.walks.reduce((prevSum, curr) => prevSum + curr.count, 0);
@@ -39,7 +42,7 @@ export async function getTopMembers(bot: Telegraf<BotContext>, gID: number | str
 				index > 3
 					? digitsToEmoji(index.toString().split("").reverse().join(""))
 					: "";
-			topMessage += `${rankStr}${indexStr} کاربر ${name}: با ${digitsToHindi(sum.toString())} قدم\n\n`;
+			topMessage += `${rankStr}${indexStr} کاربر ${name} با ${toMoneyFormat(digitsToHindi(sum.toString()))} قدم\n\n`;
 			index++;
 			if (index > 50) break;
 		} catch (error) {
@@ -54,7 +57,7 @@ export async function getTopMembers(bot: Telegraf<BotContext>, gID: number | str
 			0,
 		)
 		.toString();
-	const message = `📈برترین های این ماه:\n\n${topMessage}تا این لحظه در مجموع ${digitsToHindi(totalSumStr)} قدم توسط اعضای این گروه طی شده است.`;
+	const message = `📈برترین های این ماه:\n\n${topMessage}تا این لحظه در مجموع ${toMoneyFormat(digitsToHindi(totalSumStr))} قدم توسط اعضای این گروه طی شده است.`;
 
 	return message;
 }

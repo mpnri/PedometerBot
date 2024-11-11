@@ -2,13 +2,14 @@ import { Markup, Scenes } from "telegraf";
 import { goToMainScene, ScenesIDs as SceneIDs, ScenesIDs } from "../common";
 import type { BotContext } from "~/bot/session";
 import { prisma } from "~/db";
-import { digitsToEmoji, digitsToHindi } from "~/utils";
+import { digitsToEmoji, digitsToHindi, toMoneyFormat } from "~/utils";
+import moment from "jalali-moment";
 
 const sceneReplyWithButtons = (ctx: BotContext, message: string) =>
 	ctx.reply(
 		message,
 		Markup.keyboard(
-			["ثبت پیاده‌روی امروز", "ثبت پیاده روی روز‌های قبل", "مشاهده وضعیت"],
+			["ثبت پیاده‌روی امروز", "ثبت پیاده‌روی روز‌های قبل", "مشاهده وضعیت"],
 			{ columns: 2 },
 		),
 	);
@@ -37,7 +38,7 @@ const mainScene = new Scenes.WizardScene<BotContext>(
 mainScene.hears("ثبت پیاده‌روی امروز", async (ctx) => {
 	return ctx.scene.enter(ScenesIDs.RecordTodayScene);
 });
-mainScene.hears("ثبت پیاده روی روز‌های قبل", async (ctx) => {
+mainScene.hears("ثبت پیاده‌روی روز‌های قبل", async (ctx) => {
 	return ctx.scene.enter(ScenesIDs.RecordBeforeScene);
 });
 mainScene.hears("مشاهده وضعیت", async (ctx) => {
@@ -63,7 +64,12 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 	}
 	const status = user.walks
 		.map((walk, index) => {
-			return `${digitsToEmoji((index + 1).toString())} ${walk.date}\n🔸تعداد قدم‌ها: ${digitsToHindi(walk.count.toString())}`;
+			const dataMoment = moment.from(walk.date, "en", "YYYY-MM-DD");
+			const dataMomentStr = digitsToHindi(
+				dataMoment.locale("fa").format("jDD jMMMM"),
+			);
+			const indexStr = (index + 1).toString().split("").reverse().join("");
+			return `${digitsToEmoji(indexStr)} ${dataMomentStr}\n🔸تعداد قدم‌ها: ${digitsToHindi(walk.count.toString())}`;
 		})
 		.join("\n\n");
 
@@ -71,7 +77,7 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 		(prev, current) => prev + current.count,
 		0,
 	);
-	const totalCountStr = digitsToHindi(totalCount.toString());
+	const totalCountStr = toMoneyFormat(digitsToHindi(totalCount.toString()));
 
 	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}\n\n📈 شما در ۳۰ روز گذشته در مجموع ${totalCountStr} قدم پیاده‌روی داشته اید.`;
 	return sceneReplyWithButtons(ctx, message);
