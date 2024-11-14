@@ -71,7 +71,7 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 		});
 		if (walk) {
 			await ctx.reply(
-				`میزان پیاده‌روی شما در ${dataDateLabel}: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش ، میزان پیاده‌روی خود را مجددا وارد کنید.`,
+				`میزان پیاده‌روی شما در ${dataDateLabel}: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش، میزان پیاده‌روی خود را مجددا وارد کنید.`,
 			);
 		} else {
 			await ctx.reply(`میزان پیاده‌روی خود در ${dataDateLabel} را وارد کنید.`);

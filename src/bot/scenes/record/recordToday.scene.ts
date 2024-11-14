@@ -28,7 +28,7 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		if (walk) {
 			await sceneReplyWithBack(
 				ctx,
-				`میزان پیاده‌روی امروز شما: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش ، میزان پیاده‌روی خود را مجددا وارد کنید.`,
+				`میزان پیاده‌روی امروز شما: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش، میزان پیاده‌روی خود را مجددا وارد کنید.`,
 			);
 		} else {
 			await sceneReplyWithBack(ctx, "میزان پیاده‌روی امروز خود را وارد کنید.");

@@ -15,20 +15,21 @@ const sceneReplyWithButtons = (
 	ctx: BotContext,
 	message: string,
 	uid?: number,
+	sendHTML?: boolean,
 ) => {
 	const isRecordBeforeDateActive = uid
 		? isFeatureFlagActive(FeatureFlag.RecordBeforeDate, uid)
 		: false;
 
-	return ctx.reply(
-		message,
-		Markup.keyboard(
+	return ctx.reply(message, {
+		...Markup.keyboard(
 			isRecordBeforeDateActive
 				? ["ثبت پیاده‌روی امروز", "ثبت پیاده‌روی روز‌های قبل", "مشاهده وضعیت"]
 				: ["ثبت پیاده‌روی امروز", "مشاهده وضعیت"],
 			{ columns: isRecordBeforeDateActive ? 2 : 1 },
 		),
-	);
+		...(sendHTML ? { parse_mode: "HTML" } : {}),
+	});
 };
 
 const mainScene = new Scenes.WizardScene<BotContext>(
@@ -112,8 +113,8 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 	);
 	const totalCountStr = digitsToHindi(toMoneyFormat(totalCount.toString()));
 
-	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}\n\n📈 شما در ۳۰ روز گذشته در مجموع ${totalCountStr} قدم پیاده‌روی داشته اید.`;
-	return sceneReplyWithButtons(ctx, message, uid);
+	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}\n\n📈 شما در ۳۰ روز گذشته در مجموع <b>${totalCountStr} قدم</b> پیاده‌روی داشته اید.`;
+	return sceneReplyWithButtons(ctx, message, uid, true);
 });
 
 export { mainScene };
