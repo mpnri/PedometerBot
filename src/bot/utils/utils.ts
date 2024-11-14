@@ -3,6 +3,11 @@ import type { BotContext } from "../session";
 import type { Telegraf } from "telegraf";
 import { digitsToEmoji, digitsToHindi, toMoneyFormat } from "~/utils";
 
+//* Average human stride in meter
+const AverageHumanStride = 0.7;
+const DistanceToMoon = 384_000_000;
+const DistanceToOuterOfAtmosphere = 10_000_000;
+
 export async function getTopMembers(
 	bot: Telegraf<BotContext>,
 	gID: number | string,
@@ -52,14 +57,25 @@ export async function getTopMembers(
 		}
 	}
 
-	const totalSumStr = users
-		.reduce(
-			(prevSum, curr) =>
-				prevSum + curr.walks.reduce((prev, c) => prev + c.count, 0),
-			0,
-		)
-		.toString();
-	const message = `📈برترین های این ماه:\n\n${topMessage}🚶‍♂️ تا این لحظه در مجموع ${digitsToHindi(toMoneyFormat(totalSumStr))} قدم توسط اعضای این گروه طی شده است.`;
+	const totalSum = users.reduce(
+		(prevSum, curr) =>
+			prevSum + curr.walks.reduce((prev, c) => prev + c.count, 0),
+		0,
+	);
+	const totalSumStr = totalSum.toString();
+	const topAndTotal = `📈برترین های این ماه:\n\n${topMessage}🚶‍♂️ تا این لحظه در مجموع ${digitsToHindi(toMoneyFormat(totalSumStr))} قدم توسط اعضای این گروه طی شده است.`;
+
+	const stridesLeftToMoon = Math.trunc(
+		DistanceToMoon / AverageHumanStride - totalSum,
+	);
+	const stridesLeftToMoonStr = `🌙 فاصله باقی‌مانده تا ماه: <b>${digitsToHindi(toMoneyFormat(stridesLeftToMoon.toString()))} قدم</b>🔥🦶`;
+
+	const stridesLeftToAtmosphere = Math.trunc(
+		DistanceToOuterOfAtmosphere / AverageHumanStride - totalSum,
+	);
+	const stridesLeftToAtmosphereStr = `🌏 فاصله باقی‌مانده تا خارج اتمسفر زمین: <b>${digitsToHindi(toMoneyFormat(stridesLeftToAtmosphere.toString()))} قدم</b>🔥🦶`;
+
+	const message = `${topAndTotal}\n\n${stridesLeftToMoonStr}\n\n${stridesLeftToAtmosphereStr}`;
 
 	return message;
 }
