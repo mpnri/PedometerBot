@@ -6,7 +6,7 @@ import { isDateQuery, isTextMessage } from "~/bot/utils/types";
 import { digitsToHindi, digitsToLatin, getNow } from "~/utils";
 import moment from "jalali-moment";
 
-const AvailableEditDaysCount = 12;
+const AvailableEditDaysCount = 15;
 
 const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 	const callbackQuery = ctx.callbackQuery;
@@ -38,7 +38,7 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 		//* so data is a "Date"
 		const dataDate = data;
 
-		//* check if it's before than 12 days ago
+		//* check if it's before than `AvailableEditDaysCount` days ago
 		const { now } = getNow();
 		const twelveDaysBefore = now.subtract(AvailableEditDaysCount, "days");
 		if (twelveDaysBefore.isAfter(dataDate, "day")) {
@@ -95,7 +95,7 @@ const sendInlineDatesMessage = async (
 		include: { walks: true },
 	});
 	const walks = user?.walks;
-	const availableDateButton = new Array(4)
+	const availableDateButton = new Array(5)
 		.fill(0)
 		.map((_, index) => index)
 		.map((index) => {
@@ -128,7 +128,7 @@ const sendInlineDatesMessage = async (
 		lastActionMessage +
 		"یکی از گزینه‌های زیر را برای ثبت و یا ویرایش میزان پیاده‌روی خود انتخاب کنید." +
 		"\n" +
-		" شما می‌توانید میزان پیاده‌روی خود را تا حداکثر ۱۲ روز قبل ویرایش کنید.";
+		`شما می‌توانید میزان پیاده‌روی خود را تا حداکثر ${digitsToHindi(AvailableEditDaysCount.toString())} روز قبل ویرایش کنید.`;
 
 	await ctx.reply(message, Markup.inlineKeyboard(availableDateButton));
 };

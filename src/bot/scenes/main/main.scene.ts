@@ -99,8 +99,10 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 			const dataMomentStr = digitsToHindi(
 				dataMoment.locale("fa").format("jDD jMMMM"),
 			);
+			const statusEmoji = getStatusEmoji(walk.count);
+
 			const indexStr = (index + 1).toString().split("").reverse().join("");
-			return `${digitsToEmoji(indexStr)} ${dataMomentStr}\n🔸تعداد قدم‌ها: ${digitsToHindi(toMoneyFormat(walk.count.toString()))}`;
+			return `${digitsToEmoji(indexStr)} ${dataMomentStr}\n🔸تعداد قدم‌ها: ${digitsToHindi(toMoneyFormat(walk.count.toString()))} ${statusEmoji}`;
 		})
 		.join("\n\n");
 
@@ -115,3 +117,28 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 });
 
 export { mainScene };
+
+const emojis = [
+	"😑",
+	"😐",
+	"☹️",
+	"🙁",
+	"😔",
+	"😶",
+	"🙂",
+	"😄",
+	"😃",
+	"😎",
+	"😎👌",
+	"💪👌",
+	"💪💯",
+	"💪🎉💯",
+];
+function getStatusEmoji(count: number) {
+	if (count < 0) return emojis[0];
+	const index = Math.trunc(count / 1000);
+	if (index >= emojis.length) {
+		return emojis[emojis.length - 1];
+	}
+	return emojis[index];
+}
