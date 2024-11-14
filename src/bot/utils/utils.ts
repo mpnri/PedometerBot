@@ -63,17 +63,23 @@ export async function getTopMembers(
 		0,
 	);
 	const totalSumStr = totalSum.toString();
-	const topAndTotal = `📈برترین های این ماه:\n\n${topMessage}🚶‍♂️ تا این لحظه در مجموع ${digitsToHindi(toMoneyFormat(totalSumStr))} قدم توسط اعضای این گروه طی شده است.`;
+	const topAndTotal = `📈برترین های این ماه:\n\n${topMessage}🚶‍♂️ تا این لحظه در مجموع <b>${digitsToHindi(toMoneyFormat(totalSumStr))} قدم</b> توسط اعضای این گروه طی شده است.`;
 
 	const stridesLeftToMoon = Math.trunc(
 		DistanceToMoon / AverageHumanStride - totalSum,
 	);
-	const stridesLeftToMoonStr = `🌙 فاصله باقی‌مانده تا ماه: <b>${digitsToHindi(toMoneyFormat(stridesLeftToMoon.toString()))} قدم</b>🔥🦶`;
+	const stridesLeftToMoonStr =
+		stridesLeftToMoon > 0
+			? `🌙 فاصله باقی‌مانده تا ماه: <b>${digitsToHindi(toMoneyFormat(stridesLeftToMoon.toString()))} قدم</b>🔥🦶`
+			: "🎉 تبریک به من، تبریک به تو، تبریک به اعضا گروه، تبریک به همه !!!\nبه ماه 🌙 رسیدیم 🔥🔥🔥";
 
 	const stridesLeftToAtmosphere = Math.trunc(
 		DistanceToOuterOfAtmosphere / AverageHumanStride - totalSum,
 	);
-	const stridesLeftToAtmosphereStr = `🌏 فاصله باقی‌مانده تا خارج اتمسفر زمین: <b>${digitsToHindi(toMoneyFormat(stridesLeftToAtmosphere.toString()))} قدم</b>🔥🦶`;
+	const stridesLeftToAtmosphereStr =
+		stridesLeftToAtmosphere > 0
+			? `🌏 فاصله باقی‌مانده تا خارج اتمسفر زمین: <b>${digitsToHindi(toMoneyFormat(stridesLeftToAtmosphere.toString()))} قدم</b>🔥🦶`
+			: "🎉 تبریییییک!  از اتمسفر زمین 🌏 خارج شدیم 🔥🔥";
 
 	const message = `${topAndTotal}\n\n${stridesLeftToMoonStr}\n\n${stridesLeftToAtmosphereStr}`;
 
