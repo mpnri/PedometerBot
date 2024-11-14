@@ -53,6 +53,8 @@ async function sendMessageToAllUsers(bot: Telegraf, message: string) {
 	console.log(message);
 	const allUsers = await prisma.user.findMany();
 	console.log("sending this message to all Users:", allUsers.length, "user.\n");
+
+	let errorCount = 0;
 	for (const user of allUsers) {
 		try {
 			await bot.telegram.sendMessage(user.uid.toString(), message, {
@@ -61,7 +63,12 @@ async function sendMessageToAllUsers(bot: Telegraf, message: string) {
 			console.log("message successfully sent to", user.uid.toString());
 		} catch (error) {
 			console.error("send message error", error);
+			errorCount++;
 		}
 	}
+
+	console.log(
+		`\n📊 Results: (${allUsers.length} users)\n✅ ${allUsers.length - errorCount} succeed.\n❌ ${errorCount} failed.`,
+	);
 	bot.stop();
 }
