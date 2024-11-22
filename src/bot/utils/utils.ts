@@ -62,8 +62,17 @@ export async function getTopMembers(
 			prevSum + curr.walks.reduce((prev, c) => prev + c.count, 0),
 		0,
 	);
-	const totalSumStr = totalSum.toString();
-	const topAndTotal = `📈برترین های این ماه:\n\n${topMessage}🚶‍♂️ تا این لحظه در مجموع <b>${digitsToHindi(toMoneyFormat(totalSumStr))} قدم</b> توسط اعضای این گروه طی شده است.`;
+	const totalCount = users.reduce(
+		(prevCount, curr) => prevCount + curr.walks.length,
+		0,
+	);
+
+	const totalSumStr = digitsToHindi(toMoneyFormat(totalSum.toString()));
+	const totalAverageStr = digitsToHindi(
+		toMoneyFormat(Math.trunc(totalSum / totalCount).toString()),
+	);
+
+	const topAndTotal = `📈برترین های این ماه:\n\n${topMessage}🚶‍♂️ تا این لحظه در مجموع <b>${totalSumStr} قدم</b> توسط اعضای این گروه طی شده‌است.\n🚶‍♀️ اعضای این گروه به طور متوسط روزانه <b>${totalAverageStr} قدم</b> را طی می‌کنند.`;
 
 	const stridesLeftToMoon = Math.trunc(
 		DistanceToMoon / AverageHumanStride - totalSum,

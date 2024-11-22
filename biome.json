@@ -23,7 +23,8 @@
 			"style": {
 				"useConst": "warn",
 				"useTemplate": "info"
-			}
+			},
+			"complexity": { "noForEach": "off" }
 		}
 	},
 	"javascript": {

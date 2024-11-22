@@ -21,15 +21,22 @@ const sceneReplyWithButtons = (
 		? isFeatureFlagActive(FeatureFlag.RecordBeforeDate, uid)
 		: false;
 
-	return ctx.reply(message, {
-		...Markup.keyboard(
-			isRecordBeforeDateActive
-				? ["ثبت پیاده‌روی امروز", "ثبت پیاده‌روی روز‌های قبل", "مشاهده وضعیت"]
-				: ["ثبت پیاده‌روی امروز", "مشاهده وضعیت"],
-			{ columns: isRecordBeforeDateActive ? 2 : 1 },
-		),
-		...(sendHTML ? { parse_mode: "HTML" } : {}),
-	});
+	return ctx
+		.reply(message, {
+			...Markup.keyboard(
+				isRecordBeforeDateActive
+					? [
+							"ثبت پیاده‌روی امروز",
+							"ثبت پیاده‌روی روز‌های قبل",
+							"مشاهده وضعیت 📊",
+							"یادآور روزانه ⏰",
+						]
+					: ["ثبت پیاده‌روی امروز", "مشاهده وضعیت 📊"],
+				{ columns: isRecordBeforeDateActive ? 2 : 1 },
+			),
+			...(sendHTML ? { parse_mode: "HTML" } : {}),
+		})
+		.catch((err) => console.error("MAIN send message ERROR:", err));
 };
 
 const mainScene = new Scenes.WizardScene<BotContext>(
@@ -72,7 +79,7 @@ mainScene.hears("ثبت پیاده‌روی روز‌های قبل", async (ctx)
 		ctx.session.uid,
 	);
 });
-mainScene.hears("مشاهده وضعیت", async (ctx) => {
+mainScene.hears("مشاهده وضعیت 📊", async (ctx) => {
 	const { id, uid } = ctx.session;
 	if (!id || !uid) {
 		return sceneReplyWithButtons(
@@ -113,8 +120,20 @@ mainScene.hears("مشاهده وضعیت", async (ctx) => {
 	);
 	const totalCountStr = digitsToHindi(toMoneyFormat(totalCount.toString()));
 
-	const message = `📊وضعیت شما در ۳۰ روز گذشته:\n\n${status}\n\n📈 شما در ۳۰ روز گذشته در مجموع <b>${totalCountStr} قدم</b> پیاده‌روی داشته اید.`;
+	const totalDaysCountStr = digitsToHindi(user.walks.length.toString());
+
+	const averageCountStr = digitsToHindi(
+		toMoneyFormat(Math.trunc(totalCount / user.walks.length).toString()),
+	);
+
+	const totalsMessage = `شما در طول <b>${totalDaysCountStr} روز</b>:\n📈 در مجموع <b>${totalCountStr} قدم</b> پیاده‌روی داشته اید.\n📉 به طور میانگین روزانه <b>${averageCountStr} قدم</b> پیاده‌روی کرده اید.`;
+
+	const message = `📊وضعیت شما در ماه گذشته:\n\n${status}\n\n${totalsMessage}`;
 	return sceneReplyWithButtons(ctx, message, uid, true);
+});
+
+mainScene.hears("یادآور روزانه ⏰", async (ctx) => {
+	return ctx.scene.enter(ScenesIDs.SetReminderScene);
 });
 
 export { mainScene };

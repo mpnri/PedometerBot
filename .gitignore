@@ -15,5 +15,6 @@ backups/
 logs/
 
 *.db
+*.db.txt
 *.sqlite
 *.db-journal

@@ -4,10 +4,18 @@ import type { BotContext } from "~/bot/session";
 import { prisma } from "~/db";
 import { isTextMessage } from "~/bot/utils/types";
 import { digitsToHindi, digitsToLatin, getNow } from "~/utils";
-import moment from "moment";
 
-const sceneReplyWithBack = (ctx: BotContext, message: string) =>
-	ctx.reply(message, Markup.keyboard(["بازگشت"]));
+const sceneReplyWithBack = (
+	ctx: BotContext,
+	message: string,
+	sendHTML?: boolean,
+) =>
+	ctx
+		.reply(message, {
+			...Markup.keyboard(["بازگشت"]),
+			...(sendHTML ? { parse_mode: "HTML" } : {}),
+		})
+		.catch(console.error);
 
 const recordTodayScene = new Scenes.WizardScene<BotContext>(
 	SceneIDs.RecordTodayScene,
@@ -16,7 +24,9 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		const { id, uid } = ctx.session;
 		if (chat?.type !== "private" || !id || !uid) return;
 
-		const { nowDate } = getNow();
+		const { nowDate, now } = getNow();
+		const todayFa = now.clone().locale("fa").format("jDD jMMMM");
+
 		const user = await prisma.user.findUnique({
 			where: { uid },
 			include: { walks: true },
@@ -28,10 +38,14 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		if (walk) {
 			await sceneReplyWithBack(
 				ctx,
-				`میزان پیاده‌روی امروز شما: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش، میزان پیاده‌روی خود را مجددا وارد کنید.`,
+				`🚶‍♂️ میزان پیاده‌روی امروز شما (${digitsToHindi(todayFa)}): <b>${digitsToHindi(walk.count.toString())} قدم</b>\nدرصورت نیاز به ویرایش، میزان پیاده‌روی خود را مجددا وارد کنید.`,
+				true,
 			);
 		} else {
-			await sceneReplyWithBack(ctx, "میزان پیاده‌روی امروز خود را وارد کنید.");
+			await sceneReplyWithBack(
+				ctx,
+				`🚶‍♂️ میزان پیاده‌روی امروز خود (${digitsToHindi(todayFa)}) را وارد کنید.`,
+			);
 		}
 		return ctx.wizard.next();
 	},
@@ -73,7 +87,7 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 		});
 		if (oldWalk) {
 			await prisma.walk.update({ where: { id: oldWalk.id }, data: { count } });
-			await ctx.reply("با موفقیت به روزرسانی شد ✅");
+			await ctx.reply("با موفقیت به روزرسانی شد ✅").catch(console.error);
 		} else {
 			await prisma.walk.create({
 				data: {
@@ -82,7 +96,7 @@ const recordTodayScene = new Scenes.WizardScene<BotContext>(
 					date: nowDate(),
 				},
 			});
-			await ctx.reply("با موفقیت ذخیره شد ✅");
+			await ctx.reply("با موفقیت ذخیره شد ✅").catch(console.error);
 		}
 
 		await goToMainScene(ctx);

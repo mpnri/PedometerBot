@@ -42,9 +42,11 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 		const { now } = getNow();
 		const twelveDaysBefore = now.subtract(AvailableEditDaysCount, "days");
 		if (twelveDaysBefore.isAfter(dataDate, "day")) {
-			await ctx.reply(
-				`این تاریخ قبل تر از ${digitsToHindi(AvailableEditDaysCount.toString())} روز قبل است و امکان ویرایش یا ثبت برای آن وجود ندارد.`,
-			);
+			await ctx
+				.reply(
+					`این تاریخ قبل تر از ${digitsToHindi(AvailableEditDaysCount.toString())} روز قبل است و امکان ویرایش یا ثبت برای آن وجود ندارد.`,
+				)
+				.catch(console.error);
 			return "fail";
 		}
 
@@ -70,11 +72,15 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 			);
 		});
 		if (walk) {
-			await ctx.reply(
-				`میزان پیاده‌روی شما در ${dataDateLabel}: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش، میزان پیاده‌روی خود را مجددا وارد کنید.`,
-			);
+			await ctx
+				.reply(
+					`میزان پیاده‌روی شما در ${dataDateLabel}: ${digitsToHindi(walk.count.toString())} قدم\nدرصورت نیاز به ویرایش، میزان پیاده‌روی خود را مجددا وارد کنید.`,
+				)
+				.catch(console.error);
 		} else {
-			await ctx.reply(`میزان پیاده‌روی خود در ${dataDateLabel} را وارد کنید.`);
+			await ctx
+				.reply(`میزان پیاده‌روی خود در ${dataDateLabel} را وارد کنید.`)
+				.catch(console.error);
 		}
 		ctx.scene.session.recordBeforeScene = { date: dataDate };
 		return "next";
@@ -130,7 +136,9 @@ const sendInlineDatesMessage = async (
 		"\n" +
 		`شما می‌توانید میزان پیاده‌روی خود را تا حداکثر ${digitsToHindi(AvailableEditDaysCount.toString())} روز قبل ویرایش کنید.`;
 
-	await ctx.reply(message, Markup.inlineKeyboard(availableDateButton));
+	await ctx
+		.reply(message, Markup.inlineKeyboard(availableDateButton))
+		.catch(console.error);
 };
 
 const recordBeforeScene = new Scenes.WizardScene<BotContext>(
@@ -140,10 +148,9 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 		const { id, uid } = ctx.session;
 		if (chat?.type !== "private" || !id || !uid) return;
 
-		const message = await ctx.reply(
-			"لطفا کمی صبر کنید",
-			Markup.removeKeyboard(),
-		);
+		await ctx
+			.reply("لطفا کمی صبر کنید", Markup.removeKeyboard())
+			.catch(console.error);
 		// ctx.deleteMessage(message.message_id);
 		await sendInlineDatesMessage(ctx, uid);
 		return ctx.wizard.next();
@@ -181,20 +188,26 @@ const recordBeforeScene = new Scenes.WizardScene<BotContext>(
 
 		const message = ctx.message;
 		if (!isTextMessage(message)) {
-			return ctx.reply("لطفا یک عدد در قالب یک پیام متنی بفرستید!");
+			return ctx
+				.reply("لطفا یک عدد در قالب یک پیام متنی بفرستید!")
+				.catch(console.error);
 		}
 		const latinMessage = digitsToLatin(message.text.trim());
 		const count = +latinMessage;
 		if (Number.isNaN(count)) {
-			return ctx.reply("لطفا یک عدد در قالب یک پیام متنی بفرستید!");
+			return ctx
+				.reply("لطفا یک عدد در قالب یک پیام متنی بفرستید!")
+				.catch(console.error);
 		}
 		if (count < 0) {
-			return ctx.reply("پیاده‌روی منفی؟ :)");
+			return ctx.reply("پیاده‌روی منفی؟ :)").catch(console.error);
 		}
 		if (count > 1e6) {
-			return ctx.reply(
-				"بیشتر از یه میلیون قدم راه رفتی؟؟\nخداقوت ولی نمیتونیم ثبت کنیم :)",
-			);
+			return ctx
+				.reply(
+					"بیشتر از یه میلیون قدم راه رفتی؟؟\nخداقوت ولی نمیتونیم ثبت کنیم :)",
+				)
+				.catch(console.error);
 		}
 
 		//iran time

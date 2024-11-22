@@ -5,8 +5,8 @@ import type { BotContext, BotSession } from "./session";
 import { getNow, isDevelopmentMode } from "../utils";
 import { BotStage } from "./scenes";
 import { goToMainScene, ScenesIDs } from "./scenes/common";
-import { prisma } from "../db";
 import { getTopMembers } from "./utils/utils";
+import { runReminderJob } from "./jobs";
 
 const proxy = new SocksProxyAgent("socks5://127.0.0.1:10808");
 
@@ -21,7 +21,7 @@ export const SetupBot = async (token: string) => {
 		telegram: isDevelopmentMode() ? { agent: proxy } : undefined,
 	});
 
-	// bot.telegram.sendMessage
+	//todo: move to Jobs
 	setInterval(() => {
 		const { now } = getNow();
 
@@ -41,12 +41,17 @@ export const SetupBot = async (token: string) => {
 			);
 		}
 	}, 60_000);
+
+	setTimeout(() => {
+		//* run reminders Job
+		runReminderJob(bot);
+	}, 60_000);
+
 	// bot.use(async (ctx) => {
-	// 	console.log("balee", ctx.message);
-	// 	// if (ctx.scene.current?.id !== ScenesIDs.MainScene) {
-	// 	// 	//todo: not working
-	// 	// 	return goToMainScene(ctx);
-	// 	// }
+	// if (ctx.scene.current?.id !== ScenesIDs.MainScene) {
+	// 	//todo: not working
+	// 	return goToMainScene(ctx);
+	// }
 	// });
 	// bot.on("message", async (ctx) => {});
 
@@ -65,7 +70,9 @@ export const SetupBot = async (token: string) => {
 			ctx.session.cnt = 1;
 		}
 		console.log(ctx.session.cnt);
-		await ctx.reply(`سلام ${chat.first_name} 👋`, Markup.removeKeyboard());
+		await ctx
+			.reply(`سلام ${chat.first_name} 👋`, Markup.removeKeyboard())
+			.catch((err) => console.error("Start Error:", err));
 		return goToMainScene(ctx);
 	});
 
@@ -75,6 +82,7 @@ export const SetupBot = async (token: string) => {
 			"initialed without /start command",
 			ctx.scene.current?.id,
 		);
+		if (ctx.chat?.type !== "private") return;
 		if (ctx.scene.current?.id !== ScenesIDs.MainScene) {
 			//todo: not working
 			return goToMainScene(ctx);

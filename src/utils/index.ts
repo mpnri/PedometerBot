@@ -1,4 +1,3 @@
-// import moment from "moment";
 import moment from "jalali-moment";
 
 export const isDevelopmentMode = () => process.env.NODE_ENV === "development";
@@ -115,3 +114,8 @@ export class Mutex {
 }
 
 export { FeatureFlag, isFeatureFlagActive } from "./feature";
+export { inlineErrorHandler } from "./error";
+
+const reminderFormat = /^[0-9][0-9]:[0-9][0-9]$/;
+export const checkIsReminderFormat = (value: string) =>
+	reminderFormat.test(value);

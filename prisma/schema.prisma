@@ -12,8 +12,11 @@ datasource db {
 
 model User {
   id    Int    @id @default(autoincrement())
-  uid   BigInt    @unique
+  uid   BigInt @unique
   walks Walk[]
+
+  //* format("HH:MM")
+  reminderTime String?
 }
 
 model Walk {
