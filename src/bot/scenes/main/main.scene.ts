@@ -103,6 +103,7 @@ mainScene.hears("مشاهده وضعیت 📊", async (ctx) => {
 	}
 	const status = user.walks
 		.map((walk, index) => {
+			//! careful it returns utc time
 			const dataMoment = moment.from(walk.date, "en", "YYYY-MM-DD");
 			const dataMomentStr = digitsToHindi(
 				dataMoment.locale("fa").format("jDD jMMMM"),

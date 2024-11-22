@@ -50,6 +50,7 @@ const callbackDateHandler = async (ctx: BotContext, uid: number) => {
 			return "fail";
 		}
 
+		//! careful it returns utc time
 		const dataMoment = moment.from(dataDate, "en", "YYYY-MM-DD");
 		const dataDateLabel = digitsToHindi(
 			dataMoment.locale("fa").format("jDD jMMMM"),

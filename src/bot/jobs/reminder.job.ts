@@ -6,7 +6,7 @@ import fs from "node:fs";
 import moment from "jalali-moment";
 
 const LastJobFilePath = "./lastJob.db.txt";
-const JobTimeFormat = "YYYY-MM-DD HH:mm:ss";
+const JobTimeFormat = "YYYY-MM-DD HH:mm:ss ZZ";
 const ReminderJobTimeout = 1 * 60_000;
 const JobsTimeDiff = 1 * 60_000;
 
