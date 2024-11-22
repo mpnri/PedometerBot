@@ -1,6 +1,6 @@
 import type { Telegraf } from "telegraf";
 import type { BotContext, BotSession } from "../session";
-import { getNow } from "~/utils";
+import { getNow, toIranMoment } from "~/utils";
 import { prisma } from "~/db";
 import fs from "node:fs";
 import moment from "jalali-moment";
@@ -28,7 +28,7 @@ export async function runReminderJob(bot: Telegraf<BotContext>) {
 	const beforeDiff = now.clone().subtract(JobsTimeDiff / 1000, "seconds");
 
 	const ensureLastRunJobTime = lastRunJobTimeStr
-		? moment.from(lastRunJobTimeStr, "en", JobTimeFormat)
+		? toIranMoment(moment.from(lastRunJobTimeStr, "en", JobTimeFormat))
 		: beforeDiff;
 
 	const diff = now.diff(ensureLastRunJobTime);
@@ -51,7 +51,8 @@ export async function runReminderJob(bot: Telegraf<BotContext>) {
 			const message =
 				"<b>⏰ یادآور ثبت پیاده‌روی امروز 🚶‍♂️🚶‍♀️</b>" +
 				"\n\n" +
-				'کاربر گرامی با مراجعه به قسمت "ثبت پیاده‌روی امروز" در بات، همراه با بقیه اعضا کمپین (در رسیدن به ماه 🌙) مشارکت کنید! 😁' + "\n\n"+ "";
+				'کاربر گرامی با مراجعه به قسمت "ثبت پیاده‌روی امروز" در بات، همراه با بقیه اعضا کمپین (در رسیدن به ماه 🌙) مشارکت کنید! 😁' +
+				"";
 
 			users.forEach((user) => {
 				const uid = user.uid.toString();

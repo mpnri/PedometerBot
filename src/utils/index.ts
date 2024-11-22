@@ -1,4 +1,4 @@
-import moment from "jalali-moment";
+import moment, { type Moment } from "jalali-moment";
 
 export const isDevelopmentMode = () => process.env.NODE_ENV === "development";
 
@@ -71,12 +71,16 @@ export function toMoneyFormat(value: string): string {
  * @returns **nowDate:** `format("YYYY-MM-DD")`
  */
 export function getNow() {
-	const now = moment().utc().utcOffset(3.5);
+	const now = toIranMoment(moment());
 	const nowDate = () => now.format("YYYY-MM-DD");
 
 	const nowJalali = now.clone().locale("fa");
 	const nowDateJalali = () => nowJalali.format("YYYY-MM-DD");
 	return { now, nowDate, nowJalali, nowDateJalali };
+}
+
+export function toIranMoment(moment: Moment) {
+	return moment.utc().utcOffset(3.5);
 }
 
 export class Mutex {
