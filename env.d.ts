@@ -5,6 +5,7 @@ declare global {
 			BOT_TOKEN?: string;
 			GROUP_IDs?: string;
 			GROUP_JOB_TIME?: string;
+			BA_IDs?: string;
 		}
 	}
 }

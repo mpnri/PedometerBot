@@ -2,15 +2,21 @@ import { prisma } from "~/db";
 import type { BotContext } from "../session";
 import type { Telegraf } from "telegraf";
 import { digitsToEmoji, digitsToHindi, toMoneyFormat } from "~/utils";
+import type {
+	ChatMemberAdministrator,
+	ChatMemberOwner,
+} from "telegraf/typings/core/types/typegram";
 
 //* Average human stride in meter
 const AverageHumanStride = 0.7;
 const DistanceToMoon = 384_000_000;
 const DistanceToOuterOfAtmosphere = 10_000_000;
 
+//todo: move to job utils
 export async function getTopMembers(
 	bot: Telegraf<BotContext>,
 	gID: number | string,
+	maxTopCount = 50,
 ) {
 	const users = await prisma.user.findMany({ include: { walks: true } });
 	const sortedUsers = users.sort((user1, user2) => {
@@ -51,7 +57,7 @@ export async function getTopMembers(
 			const walksCountStr = digitsToHindi(user.walks.length.toString());
 			topMessage += `${rankStr}${indexStr} کاربر <b>${name}</b> با ${digitsToHindi(toMoneyFormat(sum.toString()))} قدم (${walksCountStr} روز)\n\n`;
 			index++;
-			if (index > 50) break;
+			if (index > maxTopCount) break;
 		} catch (error) {
 			console.log("getTopMembersError", error);
 		}
@@ -93,4 +99,42 @@ export async function getTopMembers(
 	const message = `${topAndTotal}\n\n${stridesLeftToMoonStr}\n\n${stridesLeftToAtmosphereStr}`;
 
 	return message;
+}
+
+type BotAdmin = ChatMemberOwner | ChatMemberAdministrator;
+const groupAdminsCache = new Map<
+	number,
+	{ admins: BotAdmin[]; lastGetTime: number }
+>();
+export async function isGroupAdminOrBotAdminInGroup(ctx: BotContext) {
+	const from = ctx.from;
+	const chat = ctx.chat;
+	if (!chat || chat.type === "private" || !from) return false;
+
+	const isBotAdmin = process.env.BA_IDs?.split(",").includes(
+		from.id.toString(),
+	);
+
+	if (isBotAdmin) return true;
+
+	const adminsCache = groupAdminsCache.get(chat.id);
+	//* cache updates after 1 hour
+	if (
+		!adminsCache?.admins ||
+		Date.now() - adminsCache.lastGetTime > 60 * 60 * 1000
+	) {
+		console.log("Get admins of", chat);
+		const admins = await ctx.getChatAdministrators();
+		groupAdminsCache.set(chat.id, {
+			admins,
+			lastGetTime: Date.now(),
+		});
+		return admins.find(
+			(admin) => !admin.user.is_bot && admin.user.id === from.id,
+		);
+	}
+
+	return adminsCache.admins.find(
+		(admin) => !admin.user.is_bot && admin.user.id === from.id,
+	);
 }

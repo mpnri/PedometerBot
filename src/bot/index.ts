@@ -5,8 +5,13 @@ import type { BotContext, BotSession } from "./session";
 import { getNow, isDevelopmentMode } from "../utils";
 import { BotStage } from "./scenes";
 import { goToMainScene, ScenesIDs } from "./scenes/common";
-import { getTopMembers } from "./utils/utils";
+import { getTopMembers, isGroupAdminOrBotAdminInGroup } from "./utils/utils";
 import { runReminderJob } from "./jobs";
+import { isTextMessage } from "./utils/types";
+import {
+	groupAdminMessageHandler,
+	groupNonAdminMessageHandler,
+} from "./utils/group";
 
 const proxy = new SocksProxyAgent("socks5://127.0.0.1:10808");
 
@@ -61,7 +66,7 @@ export const SetupBot = async (token: string) => {
 
 	bot.start(async (ctx, next) => {
 		const chat = ctx.chat;
-		if (chat.type !== "private") return;
+		if (chat.type !== "private") return next();
 
 		console.log("start bot:", chat.id);
 		if (ctx.session.cnt) {
@@ -74,6 +79,77 @@ export const SetupBot = async (token: string) => {
 			.reply(`سلام ${chat.first_name} 👋`, Markup.removeKeyboard())
 			.catch((err) => console.error("Start Error:", err));
 		return goToMainScene(ctx);
+	});
+
+	bot.on(["message"], async (ctx, next) => {
+		if (ctx.chat.type === "private") return next();
+		//* just for group messages
+		const message = ctx.message;
+		if (isTextMessage(message)) {
+			if (message.from.is_bot) {
+				//todo: handle anonymous admins (is_bot: true)
+				return;
+			}
+
+			const text = message.text.trim();
+			const { replyMessage: reply_msg, reply_message_id } =
+				await groupNonAdminMessageHandler(
+					message.chat.id,
+					message.from.id,
+					text,
+				);
+
+			if (reply_msg) {
+				console.log("send non admin message:", { text });
+				return ctx
+					.replyWithHTML(reply_msg, {
+						reply_parameters: {
+							message_id: reply_message_id ?? message.message_id,
+						},
+					})
+					.catch((err) => {
+						console.log(
+							`send response to message '${text}', Error`,
+							message.chat,
+							message.from,
+							":::::",
+							err,
+						);
+					});
+			}
+
+			const isAdmin = await isGroupAdminOrBotAdminInGroup(ctx);
+			if (!isAdmin) {
+				//* no admin message
+				return;
+			}
+
+			const replyMessage = await groupAdminMessageHandler(
+				bot,
+				message.chat.id,
+				text,
+			);
+
+			if (replyMessage) {
+				console.log("get admin message:", { text });
+
+				return ctx
+					.replyWithHTML(replyMessage, {
+						reply_parameters: {
+							message_id: message.message_id,
+						},
+					})
+					.catch((err) => {
+						console.log(
+							`send Admin response to message '${text}', Error`,
+							message.chat,
+							message.from,
+							":::::",
+							err,
+						);
+					});
+			}
+		}
 	});
 
 	bot.use(async (ctx) => {
